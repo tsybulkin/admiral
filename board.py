@@ -40,7 +40,7 @@ class Board():
 			a=a+"   "*(i+1)
 			for j in range(n-2-i):
 				a=a+"\\__/"
-				a=a+self.get_ship_name(n-1+i,3-n+i+j*2)
+				a=a+self.get_ship_name(n+1+i,3-n+i+j*2)
 			a=a+"\\__/"
 			a=a+"   "*(i+1)
 			print a
