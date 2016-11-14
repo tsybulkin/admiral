@@ -46,6 +46,9 @@ class Board():
 			print a
 
 	def get_ship_name(self,x,y):
+		if y>self.n/3-1: return "BL"
+		if y<-self.n/3+1: return "WL"
+		else: return "  "
 		return str(abs(x)%10)+str(abs(y)%10)
 
 	def ship_move(self,old_xy,nex_xy):
