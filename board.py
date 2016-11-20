@@ -46,10 +46,16 @@ class Board():
 			print a
 
 	def get_ship_name(self,x,y):
-		if y>self.n/3-1: return "BL"
-		if y<-self.n/3+1: return "WL"
-		else: return "  "
-		return str(abs(x)%10)+str(abs(y)%10)
+		pass
+		
 
 	def ship_move(self,old_xy,nex_xy):
 		pass
+
+	def get_initial_ship_list
+
+	def line_size(self):
+		if self.n<7:
+			retutn n-2
+		else:
+			retutn int((2*n-1)/3)
