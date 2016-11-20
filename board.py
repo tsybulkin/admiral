@@ -52,10 +52,22 @@ class Board():
 	def ship_move(self,old_xy,nex_xy):
 		pass
 
-	def get_initial_ship_list
+	def get_initial_ship_list(self, color):
+		initial_ship_list=[]
+		end_line = self.free_sea_level()
+		n = self.n
+		y=n-1
+		while y>end_line:
+			x=-2*(n-1)+y
+			while x<(n-1)*2-y+1:
+				initial_ship_list.append((x,y))
+				x=x+2
+			y=y-1
+		if color=='white':
+			initial_ship_list = [(i,-j) for (i,j) in initial_ship_list]
+		return initial_ship_list
 
-	def line_size(self):
-		if self.n<7:
-			retutn n-2
-		else:
-			retutn int((2*n-1)/3)
+
+	def free_sea_level(self):
+		if self.n<7: return 1
+		else: return int(n/3)
