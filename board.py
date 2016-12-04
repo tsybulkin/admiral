@@ -6,6 +6,7 @@ import tools
 
 
 class Board():
+
 	def __init__(self,n):
 		cell_list=[]
 		for i in range(n):
@@ -14,6 +15,18 @@ class Board():
 			cell_list.append([None]*((n+i)*2-1))
 		self.n=n
 		self.board=cell_list
+
+
+	def terminate(self, color):
+		for j in range(len(self.board)):
+			for i in range(len(board[j])):
+				if board[j][i].color == color and  board[j][i].name == 'Base':
+					 board[j][i] = None
+
+
+
+
+	def action_illegal(self, action, state): return False
 
 
 	
@@ -34,13 +47,7 @@ class Board():
 
 		elif att_type == 1:  # player was attacked
 			ships_under_attack = action
-			if not xy_under_attack in ships_under_attack or not self.one_group(ships_under_attack):
-				print "INCORRECT MOVE:", action
-				print "In attack state 1", xy_under_attack
-				grave = self.remove_ships(ships_under_attack+[xy_under_attack], grave)
-				return (0,None,None), grave
-			else:
-				return (2,xy_under_attack,ships_under_attack), grave
+			return (2,xy_under_attack,ships_under_attack), grave
 
 		elif att_type == 2:  # player 2 finished attack
 			attacking_ships = action
@@ -51,9 +58,41 @@ class Board():
 
 
 	def battle(self,attacking_ships,attacked_ships, grave):
-		grave = remove_ships(attacking_ships, grave)
-		grave = remove_ships(attacked_ships, grave)
-		return grave
+		(xa,ya)=attacking_ships[0]
+		(xd,yd)=attacked_ships[0]
+		ship_a = board[ya][xa].name
+		ship_d = board[yd][xd].name
+		ship_ranks = ['Cruiser','Esminets','Torpedo boat','Tral','Submarine']
+		ship_strength = [11., 6.8, 4.2, 2.6, 1.6, 1.]
+
+		if ship_a == 'Base': return self.remove_ships(attacking_ships, grave)
+		elif ship_a == 'Nuclear bomb': return self.remove_ships(attacking_ships, grave)
+		elif ship_a == 'Mine': return self.remove_ships(attacking_ships, grave)
+		elif ship_a == 'Torpedo': return self.remove_ships(attacking_ships, grave)
+		
+		elif ship_d == 'Base': return self.remove_ships(attacked_ships, grave)
+		elif ship_d == 'Nuclear bomb': return self.nuclear_blust((xd,yd),grave)
+		elif ship_d == 'Mine': return self.remove_ships(attacking_ships+[(xd,yd)], grave)
+		elif ship_d == 'Torpedo': return self.remove_ships([(xd,yd)], grave)
+		
+		else: 
+			rank_a = ship_ranks.index[ship_a]
+			rank_d = ship_ranks.index[ship_d]
+
+			if abs(rank_a - rank_d) == 4: # cruiser against submarine
+				if rank_a == 0: rank_a = 5
+				else: rank_d == 5
+
+			strength_a = ship_strength[rank_a]*len(attacking_ships)
+			strength_d = ship_strength[rank_d]*len(attacked_ships)
+
+			if strength_a > strength_d: return self.remove_ships(attacked_ships, grave)
+			elif strength_a < strength_d: return self.remove_ships(attacking_ships, grave)
+			else: return self.remove_ships(attacking_ships+attacked_ships, grave)
+
+
+	def nuclear_blust (self, (xd,yd), grave ):
+		return remove_ships([(xd,yd)], grave)
 
 	def remove_ships(self,ships_list, grave):
 		for i in ships_list:
@@ -132,14 +171,13 @@ class Board():
 
 	
 
-	def ship_move(self,old_xy,nex_xy):
-		(x,y)=nex_xy
+	def ship_move(self,old_xy,new_xy):
+		(x,y)=new_xy
 		if self.board[y][x]!=None:
-			raise "Eror can not do this move"
+			raise "Error can not do this move"
 		(ox,oy)=old_xy
 		self.board[y][x]=self.board[oy][ox]
 		self.board[oy][ox]=None
-		pass
 
 
 
@@ -158,6 +196,7 @@ class Board():
 			initial_ship_list = [(i,-j) for (i,j) in initial_ship_list]
 		return initial_ship_list
 
+	
 	def fill_start_ships(self,list):
 		for ((x,y),ship) in list:
 			self.board[y][x] = ship
