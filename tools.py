@@ -23,6 +23,19 @@ def check_connectivity(XYs):
 	else: return False
 
 
-def get_neighbors(XY):
-	X,Y = XY
-	return [(X+2,Y),(X-2,Y),(X+1,Y+1),(X+1,Y-1),(X-1,Y+1),(X-1,Y-1)]
+def get_neighbors(XY,n):
+	x,y = XY
+	#if not cor_cord(x,y,n): raise "incorrect cord"
+	res = []
+	preres = [(x-1,y-1),(x+1,y-1),(x-1,y+1),(x+1,y+1),(x-2,y),(x+2,y)]
+	for (x,y) in preres:
+		if cor_cord(x,y,n): res.append((x,y))
+	return res
+
+def cor_cord(x,y,n):
+	if abs(y)>=n: return False
+	elif abs(x)>n*2-2: return False
+	elif (x+y)%2 != 0: return False
+	elif abs(x)+abs(y)>n*2-2: return False
+	else: return True
+

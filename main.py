@@ -4,12 +4,13 @@
 import sys
 import board
 import rand_agent
+import human_agent
 from sunk_ships import ships_state
 
-MAX_TURN = 50
+MAX_TURN = 1000
 
 
-available_agents = {'random':rand_agent.RandomAgent} #, 'dumb', 'cute'}
+available_agents = {'random':rand_agent.RandomAgent, 'human' : human_agent.HumanAgent} #, 'dumb', 'cute'}
 
 def run(ag1, ag2):
 	if ag1 in available_agents and ag2 in available_agents:
@@ -37,11 +38,18 @@ def run_game(board, agents):
 
 	while not end_of_game(state, turn):
 		action = agents[color].get_action(state)
-		attack_state,grave = board.apply_action(action,attack_state,grave)
+		print turn, "color: ", color, "   action: ", action
+		#board.show_board()
+		if board.action_illegal(attack_state,action): board.terminate(color,grave)
+		else: attack_state,grave = board.apply_action(action,attack_state,grave)
+		board.show_board()
+		
 		color = change_color(color)
 		state = (color,attack_state,board,grave)
 		turn += 1
 
+	#board.print_ships()
+	print grave
 
 
 

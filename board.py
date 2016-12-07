@@ -17,20 +17,55 @@ class Board():
 		self.board=cell_list
 
 
-	def terminate(self, color):
+	def terminate(self, color,grave):
 		for j in range(len(self.board)):
 			for i in range(len(board[j])):
-				if board[j][i].color == color and  board[j][i].name == 'Base':
-					 board[j][i] = None
+				if self.board[j][i].color == color and self.board[j][i].name == 'Base':
+					self.board[j][i] = None
+		grave['Base'][color] = grave['Base']['Total']
+
+
+	def copy(self):
+		n = self.n
+		board_copy = Board(n)
+		board_copy.board = [a[:] for a in self.board[:]]
+		return board_copy
 
 
 
+	def action_illegal(self, attack_state, action): 
+		att_type,xy_under_attack,XYs = attack_state
+		if att_type == 0:
+			# check that action is a tuple (Move, Field)
+			# Move = (old_field, new_field)
+			(move, attack_field) = action
+			if move != None:
+				(x_o,y_o), (x_n,y_n) = move
+				if not tools.cor_cord(x_o,y_o,self.n): 
+					print "illegal coordinates:", x_o,y_o
+					return True
+				if not tools.cor_cord(x_n,y_n,self.n): 
+					print "illegal coordinates:", x_n,y_n
+					return True
+				if self.board[y_n][x_n] != None: 
+					print "illegal move into non-empty cell"
+					return True
 
-	def action_illegal(self, action, state): return False
+		elif att_type == 1:
+			# check that action is a non-empty list of max 3 elements
+			# all elements should contain neighboring fields with the same ships
+			pass
+		else:
+			# check that action is a non-empty list of max 3 elements
+			# all elements should contain neighboring fields with the same ships
+
+			pass
+
+		return False
 
 
 	
-	def apply_action(action,attack_state,grave):
+	def apply_action(self,action,attack_state,grave):
 		(att_type,xy_under_attack,XYs) = attack_state
 
 		if att_type == 0:  # NO_ATTACK
@@ -53,20 +88,20 @@ class Board():
 			attacking_ships = action
 			attacked_ships = XYs
 			attack_state = (0,None,None)
-			grave = self.battle(attacking_ships,attacked_ships, grave)
+			grave = self.battle(attacking_ships, attacked_ships, grave)
 			return attack_state,grave
 
 
 	def battle(self,attacking_ships,attacked_ships, grave):
 		(xa,ya)=attacking_ships[0]
 		(xd,yd)=attacked_ships[0]
-		ship_a = board[ya][xa].name
-		ship_d = board[yd][xd].name
+		ship_a = self.board[ya][xa].name
+		ship_d = self.board[yd][xd].name
 		ship_ranks = ['Cruiser','Esminets','Torpedo boat','Tral','Submarine']
 		ship_strength = [11., 6.8, 4.2, 2.6, 1.6, 1.]
 
 		if ship_a == 'Base': return self.remove_ships(attacking_ships, grave)
-		elif ship_a == 'Nuclear bomb': return self.remove_ships(attacking_ships, grave)
+		elif ship_a == 'Nuclear bomb': return self.nuclear_blust(attacking_ships, grave)
 		elif ship_a == 'Mine': return self.remove_ships(attacking_ships, grave)
 		elif ship_a == 'Torpedo': return self.remove_ships(attacking_ships, grave)
 		
@@ -76,8 +111,9 @@ class Board():
 		elif ship_d == 'Torpedo': return self.remove_ships([(xd,yd)], grave)
 		
 		else: 
-			rank_a = ship_ranks.index[ship_a]
-			rank_d = ship_ranks.index[ship_d]
+			print "ships:", ship_a, ship_d
+			rank_a = ship_ranks.index(ship_a)
+			rank_d = ship_ranks.index(ship_d)
 
 			if abs(rank_a - rank_d) == 4: # cruiser against submarine
 				if rank_a == 0: rank_a = 5
@@ -92,14 +128,23 @@ class Board():
 
 
 	def nuclear_blust (self, (xd,yd), grave ):
-		return remove_ships([(xd,yd)], grave)
+		#x = xd
+		y = yd
+		ships_list = [(x,y),(x+4,y),(x+2,y),(x-2,y),(x-4,y),(3+x,1+y),(1+x,1+y),(x-1,y+1),(x-3,y+1),(3+x-3,1-y),(1+x,1-y),(x-1,y-1),(x-3,y-1),(2+x,2+y),(x,2+y),(x-2,y+2),(2+x,2-y),(x,2-y),(x-2,y-2)]
+		#for (x,y) in ships_list:
+		#	if self.board[y][x] != None:
+		#		if self.board[y][x].name == 'Nuclear bomb':
+		#			self.nuclear_blust((x,y),grave)
+		#		else: grave = self.remove_ships([(xd,yd)], grave) 
+		return self.remove_ships(ships_list, grave)
+
 
 	def remove_ships(self,ships_list, grave):
 		for i in ships_list:
 			(x,y)=i
-			if board[y][x] != None:
-				grave[board[y][x].name()][board[y][x].color()]=grave[board[y][x].name()][board[y][x].color()]+1
-				board[y][x] = None
+			if self.board[y][x] != None:
+				grave[self.board[y][x].name][self.board[y][x].color]=grave[self.board[y][x].name][self.board[y][x].color]+1
+				self.board[y][x] = None
 		return grave
 
 
@@ -122,45 +167,62 @@ class Board():
 			else: return False
 			
 
+	def nstring(self,n=" ",lengs=4):
+		a = str(n)
+		if len(a)<lengs:
+			a = a + " "
+		while len(a)<lengs:
+			a = " "+a
+		return ("\033[44m{}\033[0m" .format(a))
 
 
 	def show_board(self):
 		n=self.n
+		a = self.nstring(" ",5)
+		for i in range(1-n,n):
+			a = a + self.nstring(i,3)
+		a = a + self.nstring(" ",4)
+		print a
 		for i in range(n):
-			a=" "*(n*3-2-i*3)
+			a=self.nstring(1-2*n+i)+" "*(n*3-2-i*3)
+
 			for j in range(i):
 				a=a+"__/"
 				a=a+self.get_ship_name(i+1-2*n,1-i+j*2)
 				a=a+"\\"
 			a=a+"__"
-			a=a+" "*(n*3-2-i*3)
+			a=a+" "*(n*3-2-i*3)+self.nstring(1-2*n+i)
 			print a
 		for i in range(n):
-			a=""
+			a=self.nstring(1-n+i*2)
 			for j in range(n-1):
 				a=a+"/"
 				a=a+self.get_ship_name(1-n+2*i,1-n+j*2)
 				a=a+"\\__"
 			a=a+"/"
 			a=a+self.get_ship_name(1-n+2*i,1-n+(n-1)*2)
-			a=a+"\\"
+			a=a+"\\"+self.nstring(1-n+i*2)
 			print a
-			a=""
+			a=self.nstring(2-n+i*2)
 			for j in range(n-1):
 				a=a+"\\__/"
 				a=a+self.get_ship_name(2-n+2*i,2-n+j*2)
-			a=a+"\\__/"
+			a=a+"\\__/"+self.nstring(2-n+i*2)
 			print a
 		for i in range(n-1):
-			a=""
+			a=self.nstring(n+1+i)
 			a=a+"   "*(i+1)
 			for j in range(n-2-i):
 				a=a+"\\__/"
 				a=a+self.get_ship_name(n+1+i,3-n+i+j*2)
 			a=a+"\\__/"
-			a=a+"   "*(i+1)
+			a=a+"   "*(i+1)+self.nstring(n+1+i)
 			print a
-
+		a = self.nstring(" ",5)
+		for i in range(1-n,n):
+			a = a + self.nstring(i,3)
+		a = a + self.nstring(" ",4)
+		print a
 
 
 	def get_ship_name(self,x,y):
@@ -171,6 +233,8 @@ class Board():
 
 	
 
+
+
 	def ship_move(self,old_xy,new_xy):
 		(x,y)=new_xy
 		if self.board[y][x]!=None:
@@ -179,7 +243,11 @@ class Board():
 		self.board[y][x]=self.board[oy][ox]
 		self.board[oy][ox]=None
 
-
+	def print_ships(self):
+		for y in range(1-self.n,self.n):
+			for x in range(-(self.n-1)*2,2*self.n-1):
+				if self.board[y][x] != None:
+					print self.get_ship_name(x,y)
 
 	def get_initial_ship_list(self, color):
 		initial_ship_list=[]
